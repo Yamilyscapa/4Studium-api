@@ -3,11 +3,15 @@ package main
 import (
 	"os"
 
+	"studium/pkg/router"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
+// @title Studium API
+// @version 0.1
 func main() {
 	Init()
 }
@@ -21,12 +25,11 @@ func Init() {
 	// Set up CORS middleware
 	r.Use(cors.Default())
 
-	// Routes
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Welcome to 4Studium API",
-		})
-	})
+	// Register routes
+	students := r.Group("/students")
+	teachers := r.Group("/teachers")
+	router.RegisterStudentsRoute(students)
+	router.RegisterTeachersRoute(teachers)
 
 	// Initialize the server
 	if PORT := os.Getenv("PORT"); PORT != "" {
