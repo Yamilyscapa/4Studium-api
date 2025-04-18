@@ -1,0 +1,27 @@
+# Archivos binarios para programas y plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Archivos de prueba compilados con `go test -c`
+*.test
+
+# Salida de herramientas de cobertura de código
+*.out
+
+# Archivos de trabajo de Go
+go.work
+go.work.sum
+
+# Archivos de entorno
+.env
+
+# Directorios de dependencias (descomenta si usas vendor/)
+# vendor/
+
+# Archivos y carpetas de configuración del editor
+.idea/
+.vscode/
+*.swp
