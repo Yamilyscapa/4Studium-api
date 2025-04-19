@@ -39,9 +39,11 @@ func Config() {
 
 func Router(r *gin.Engine) {
 
-	// Register routes
+	// Initialize routes
 	students := r.Group("/students")
 	teachers := r.Group("/teachers")
+
+	// Register routes
 	router.RegisterStudentsRoute(students)
 	router.RegisterTeachersRoute(teachers)
 }

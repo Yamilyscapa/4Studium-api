@@ -1,0 +1,60 @@
+ENUM statusEnum ("PENDING", "COMPLETED", "OVERDUE");
+CREATE TABLE Schools (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  phoneNumber TEXT NOT NULL,
+  email TEXT NOT NULL
+);
+CREATE TABLE Groups (
+  id UUID PRIMARY KEY,
+  schoolId UUID REFERENCES Schools(id)
+);
+CREATE TABLE Students (
+  id UUID PRIMARY KEY,
+  firstName TEXT NOT NULL,
+  secondName TEXT,
+  middleName TEXT NOT NULL,
+  lastName TEXT NOT NULL,
+  password TEXT NOT NULL,
+  schoolId UUID REFERENCES Schools(id) NOT NULL,
+  groupId UUID REFERENCES Groups(id) NOT NULL,
+);
+CREATE TABLE Teachers (
+  id UUID PRIMARY KEY,
+  firstName TEXT NOT NULL,
+  secondName TEXT,
+  middleName TEXT NOT NULL,
+  lastName TEXT NOT NULL,
+  password TEXT NOT NULL,
+  schoolId UUID REFERENCES Schools(id) NOT NULL,
+  sudo BOOLEAN NOT NULL DEFAULT FALSE,
+);
+CREATE TABLE Courses (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  schoolId UUID REFERENCES Schools(id) NOT NULL
+);
+CREATE TABLE Assignments (
+  id UUID PRIMARY KEY,
+  courseId UUID REFERENCES Courses(id) NOT NULL,
+  studentId UUID REFERENCES Students(id) NOT NULL,
+  teacherId UUID REFERENCES Teachers(id) NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  createdAt DATE NOT NULL,
+  dueDate DATE NOT NULL,
+  completedAt DATE,
+  status statusEnum NOT NULL,
+);
+CREATE TABLE Grades (
+  id UUID PRIMARY KEY,
+  studentId UUID REFERENCES Students(id) NOT NULL,
+  courseId UUID REFERENCES Courses(id) NOT NULL,
+  grade INT NOT NULL CHECK (
+    grade >= 0
+    AND grade <= 100
+  ),
+  date DATE NOT NULL
+);
