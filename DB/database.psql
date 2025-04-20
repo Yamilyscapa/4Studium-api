@@ -1,15 +1,32 @@
-ENUM statusEnum ("PENDING", "COMPLETED", "OVERDUE");
+-- Enum para representar el estado de las tareas
+CREATE TYPE statusEnum AS ENUM ('PENDING', 'COMPLETED', 'OVERDUE');
+-- Función global para actualizar el campo updatedAt
+CREATE OR REPLACE FUNCTION update_updatedAt_column() RETURNS TRIGGER AS $$ BEGIN NEW.updatedAt = now();
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- Tabla de Escuelas
 CREATE TABLE Schools (
   id UUID PRIMARY KEY,
   name TEXT NOT NULL,
   address TEXT NOT NULL,
   phoneNumber TEXT NOT NULL,
-  email TEXT NOT NULL
+  email TEXT NOT NULL,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_schools BEFORE
+UPDATE ON Schools FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Grupos
 CREATE TABLE Groups (
   id UUID PRIMARY KEY,
-  schoolId UUID REFERENCES Schools(id)
+  schoolId UUID REFERENCES Schools(id) ON DELETE CASCADE,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_groups BEFORE
+UPDATE ON Groups FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Estudiantes
 CREATE TABLE Students (
   id UUID PRIMARY KEY,
   firstName TEXT NOT NULL,
@@ -17,9 +34,14 @@ CREATE TABLE Students (
   middleName TEXT NOT NULL,
   lastName TEXT NOT NULL,
   password TEXT NOT NULL,
-  schoolId UUID REFERENCES Schools(id) NOT NULL,
-  groupId UUID REFERENCES Groups(id) NOT NULL,
+  schoolId UUID REFERENCES Schools(id) NOT NULL ON DELETE CASCADE,
+  groupId UUID REFERENCES Groups(id) NOT NULL ON DELETE CASCADE,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_students BEFORE
+UPDATE ON Students FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Profesores
 CREATE TABLE Teachers (
   id UUID PRIMARY KEY,
   firstName TEXT NOT NULL,
@@ -27,34 +49,56 @@ CREATE TABLE Teachers (
   middleName TEXT NOT NULL,
   lastName TEXT NOT NULL,
   password TEXT NOT NULL,
-  schoolId UUID REFERENCES Schools(id) NOT NULL,
+  schoolId UUID REFERENCES Schools(id) NOT NULL ON DELETE CASCADE,
   sudo BOOLEAN NOT NULL DEFAULT FALSE,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_teachers BEFORE
+UPDATE ON Teachers FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Cursos
 CREATE TABLE Courses (
   id UUID PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
-  schoolId UUID REFERENCES Schools(id) NOT NULL
+  schoolId UUID REFERENCES Schools(id) NOT NULL ON DELETE CASCADE,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_courses BEFORE
+UPDATE ON Courses FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Tareas (Assignments)
 CREATE TABLE Assignments (
   id UUID PRIMARY KEY,
-  courseId UUID REFERENCES Courses(id) NOT NULL,
-  studentId UUID REFERENCES Students(id) NOT NULL,
-  teacherId UUID REFERENCES Teachers(id) NOT NULL,
+  courseId UUID REFERENCES Courses(id) NOT NULL ON DELETE CASCADE,
+  studentId UUID REFERENCES Students(id) NOT NULL ON DELETE CASCADE,
+  teacherId UUID REFERENCES Teachers(id) NOT NULL ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  createdAt DATE NOT NULL,
-  dueDate DATE NOT NULL,
-  completedAt DATE,
-  status statusEnum NOT NULL,
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now(),
+  dueDate TIMESTAMP NOT NULL,
+  completedAt TIMESTAMP,
+  studentFiles TEXT [],
+  teacherFiles TEXT [],
+  studentMessages TEXT,
+  status statusEnum NOT NULL DEFAULT 'PENDING',
+  CONSTRAINT dueDate_check CHECK (dueDate > createdAt)
 );
+CREATE TRIGGER trg_updatedAt_assignments BEFORE
+UPDATE ON Assignments FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
+-- Tabla de Calificaciones (Grades)
 CREATE TABLE Grades (
   id UUID PRIMARY KEY,
-  studentId UUID REFERENCES Students(id) NOT NULL,
-  courseId UUID REFERENCES Courses(id) NOT NULL,
+  studentId UUID REFERENCES Students(id) NOT NULL ON DELETE CASCADE,
+  courseId UUID REFERENCES Courses(id) NOT NULL ON DELETE CASCADE,
   grade INT NOT NULL CHECK (
     grade >= 0
     AND grade <= 100
   ),
-  date DATE NOT NULL
+  date TIMESTAMP NOT NULL DEFAULT now(),
+  createdAt TIMESTAMP NOT NULL DEFAULT now(),
+  updatedAt TIMESTAMP NOT NULL DEFAULT now()
 );
+CREATE TRIGGER trg_updatedAt_grades BEFORE
+UPDATE ON Grades FOR EACH ROW EXECUTE FUNCTION update_updatedAt_column();
